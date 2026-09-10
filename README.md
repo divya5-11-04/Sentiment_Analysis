@@ -1,139 +1,377 @@
-# 🎮 EA Player Review & Sentiment Analytics
+# Player Sentiment Analysis
 
-A player-analytics project built specifically for **EA Hyderabad's Product
-Analyst Intern (Slingshot Studios)** role — it mirrors the actual workflow
-in the job description: pull player feedback data with SQL, analyze it
-with Python and statistics, apply basic data science (classification,
-clustering, anomaly detection, forecasting), and communicate findings a
-producer could act on.
+An end-to-end NLP and analytics project that analyzes player reviews using sentiment analysis, SQL, and an interactive Streamlit dashboard.
 
-**[Notebook with full analysis →](analysis/ea_player_sentiment_analysis.ipynb)**
-**[Interactive dashboard →](app/streamlit_app.py)** (run locally or deploy in ~2 minutes — see below)
+The project takes unstructured player reviews, processes the text, extracts sentiment signals, stores the results in SQLite, and presents insights through an interactive dashboard.
+
+**Live Dashboard:** [Add Streamlit link here]
+**GitHub Repository:** https://github.com/divya5-11-04/Sentiment_Analysis
 
 ---
 
-## Why this dataset is synthetic (read this first)
+## Project Overview
 
-EA's internal review pipeline and the Steam API weren't reachable from the
-environment this was built in. Rather than fake a "real" data source,
-`data/generate_data.py` **generates a structurally realistic dataset**:
-~7,900 player reviews across four EA titles (EA SPORTS FC 25, Apex
-Legends, The Sims 4, Battlefield 2042), Jan–Jun 2024, with:
+Online player reviews contain useful signals about how users experience a game. However, manually reading thousands of reviews makes it difficult to identify common complaints, positive feedback, and changes in sentiment over time.
 
-- rating ↔ sentiment correlation baked in (not random)
-- weekday/weekend seasonality in review volume
-- platform and region distributions
-- **one deliberate "bad patch" event** injected into Battlefield 2042's
-  data — a real dip a hypothesis test and an anomaly detector both need
-  to independently rediscover
+This project builds a complete pipeline to:
 
-This means every result below is a genuine output of the analysis code
-running against this data, not a cherry-picked example — you can
-regenerate the dataset with a different random seed and rerun everything.
+* Clean and preprocess review text
+* Perform sentiment analysis
+* Classify reviews into sentiment categories
+* Analyze sentiment by game and time period
+* Store processed data in SQLite
+* Use SQL queries to answer analytical questions
+* Identify unusual changes in sentiment
+* Present the results through an interactive Streamlit dashboard
 
 ---
 
-## Key findings
+## Key Questions
 
-| Question | Method | Result |
-|---|---|---|
-| Did the patch actually hurt Battlefield 2042 sentiment? | Welch's t-test | Rating dropped from 3.09 → 1.75 post-patch, **p = 3.4e-86** — not noise |
-| Does playtime predict satisfaction? | Pearson correlation + OLS | r ≈ 0.02 — negligible in practice, despite being technically "significant" at n≈7,900 (a real trap worth flagging, not just p-hacking around) |
-| Can we auto-detect a bad patch from sentiment alone? | Rolling 14-day z-score anomaly detection | Flags the patch window automatically, no manual date lookup needed |
-| Can we classify review sentiment from text? | TF-IDF + Logistic Regression | 99.3% test accuracy, 93% recall on the minority negative class — checked against a 5-fold CV gap to rule out overfitting |
-| Are casual and power users affected differently by the patch? | KMeans segmentation (3 clusters) | Both segments dropped similarly — argues for a universal hotfix, not a targeted one |
-| What's next week's review volume? | Holt-Winters exponential smoothing | 14-day forecast with weekly seasonality, for community-management staffing |
+The analysis focuses on questions such as:
 
-See the notebook's final "Business Takeaways" section for the full
-write-up in plain language.
+* What proportion of reviews are positive, neutral, and negative?
+* Which games receive the most positive or negative sentiment?
+* How does sentiment change over time?
+* Which games show unusually negative sentiment?
+* What topics or words are associated with different sentiment categories?
+* Are there differences between model-based sentiment scores and classified sentiment?
+* Which games may require further investigation based on sentiment trends?
 
 ---
 
-## How this maps to the role
+## Dataset
 
-| Job description ask | Where it's covered |
-|---|---|
-| SQL: joins, aggregations, CTEs, window functions | `sql/analysis_queries.sql` — 6 queries against a real SQLite DB, including `RANK()`, `PERCENT_RANK()`, rolling averages, and share-of-total windows |
-| Python for analysis, hypothesis testing, insights | `analysis/ea_player_sentiment_analysis.ipynb` |
-| Statistics: hypothesis testing, correlation, regression | Welch's t-test, Pearson correlation, OLS regression (Steps 4–5) |
-| Data science: classification, clustering, model evaluation, overfitting | TF-IDF + Logistic Regression classifier with CV and confusion matrix (Step 3); KMeans segmentation (Step 6) |
-| Experimentation, forecasting, anomaly detection, segmentation | All four are explicit sections (Steps 4, 6, 7, 8) |
-| Visualization & communication | Every step ends in a chart and a plain-language takeaway; the dashboard makes it explorable |
-| Documenting methodology, assumptions, limitations | See "Why this dataset is synthetic" above, plus the caveats called out inline (e.g. the classifier's accuracy note, the correlation effect-size note) |
+The project uses **synthetic player-review data**.
+
+The dataset was generated because direct access to a reliable real-world player-review API was not available for this project. The generator was designed to create realistic review structures, including:
+
+* Review text
+* Game title
+* Review date
+* Rating
+* Player/reviewer information
+* Sentiment-related language patterns
+
+The dataset is intended for demonstrating the analytical pipeline and should not be interpreted as real player feedback.
 
 ---
 
-## Project structure
+## Project Pipeline
 
+```text
+Synthetic Review Data
+        ↓
+Data Cleaning
+        ↓
+Text Preprocessing
+        ↓
+Sentiment Analysis
+        ↓
+Feature Extraction
+        ↓
+SQLite Database
+        ↓
+SQL Analysis
+        ↓
+Streamlit Dashboard
 ```
-ea-player-sentiment/
-├── data/
-│   ├── generate_data.py          # synthetic dataset generator (documented, seeded)
-│   └── ea_player_reviews.csv      # generated output (~7,900 reviews)
-├── sql/
-│   ├── build_database.py          # loads CSV into SQLite
-│   ├── analysis_queries.sql       # joins, CTEs, window functions
-│   └── ea_analytics.db            # generated SQLite DB
-├── analysis/
-│   ├── ea_player_sentiment_analysis.py   # source (jupytext percent format)
-│   └── ea_player_sentiment_analysis.ipynb # executed notebook with outputs
+
+---
+
+## Sentiment Analysis
+
+The project uses NLP techniques to analyze the sentiment expressed in player reviews.
+
+The sentiment pipeline includes:
+
+1. Text normalization
+2. Tokenization and preprocessing
+3. Sentiment scoring
+4. Sentiment classification
+5. Aggregation for analytical reporting
+
+The analysis uses sentiment scores to identify positive, neutral, and negative reviews.
+
+### Model Evaluation
+
+The classifier achieved approximately **99.3% accuracy** on the evaluation data.
+
+However, accuracy alone does not tell the complete story.
+
+The minority class achieved approximately **93% recall**, meaning some examples from the less-represented sentiment class were still missed.
+
+The dataset is also synthetic, so this performance should not be interpreted as expected performance on real-world player reviews. Real reviews contain more varied language, sarcasm, spelling errors, slang, mixed sentiment, and context that can make classification harder.
+
+For that reason, the project reports the evaluation result together with its limitations rather than presenting 99.3% accuracy as a production-level result.
+
+---
+
+## SQL Analytics
+
+Processed sentiment data is stored in a SQLite database.
+
+SQL queries are used to perform analysis such as:
+
+* Sentiment distribution
+* Game-level sentiment comparison
+* Average ratings
+* Review volume
+* Sentiment trends
+* Negative-review analysis
+* Time-based aggregation
+
+Example analytical workflow:
+
+```sql
+SELECT
+    game,
+    sentiment,
+    COUNT(*) AS review_count
+FROM reviews
+GROUP BY game, sentiment
+ORDER BY review_count DESC;
+```
+
+This allows the NLP output to be combined with structured analytical techniques.
+
+---
+
+## Streamlit Dashboard
+
+The project includes an interactive Streamlit dashboard for exploring the results.
+
+The dashboard provides views for:
+
+### Overview
+
+High-level metrics including:
+
+* Total reviews
+* Average rating
+* Average sentiment score
+* Positive/negative review proportions
+
+### Game Analysis
+
+Compare sentiment across different games and identify games with stronger positive or negative feedback.
+
+### Sentiment Trends
+
+Analyze how average sentiment changes over time.
+
+### Review Exploration
+
+Filter and inspect individual reviews and their associated sentiment information.
+
+### Anomaly Analysis
+
+Identify unusual changes in sentiment that may require further investigation.
+
+---
+
+## Repository Structure
+
+```text
+Sentiment_Analysis/
+│
 ├── app/
-│   └── streamlit_app.py           # interactive dashboard
+│   └── streamlit_app.py
+│
+├── analysis/
+│   ├── player_sentiment_analysis.py
+│   └── player_sentiment_analysis.ipynb
+│
+├── data/
+│   ├── generate_data.py
+│   └── player_reviews.csv
+│
+├── sql/
+│   ├── build_database.py
+│   ├── analysis_queries.sql
+│   └── player_reviews.db
+│
 ├── requirements.txt
-└── README.md
+├── README.md
+└── .gitignore
 ```
+
+> File names above should match the names currently present in the repository.
 
 ---
 
-## Running it locally
+## Technologies Used
+
+**Programming**
+
+* Python
+
+**Data Analysis**
+
+* pandas
+* NumPy
+* Matplotlib
+* Seaborn
+
+**Machine Learning / NLP**
+
+* scikit-learn
+* NLTK
+* SciPy
+* statsmodels
+
+**Database**
+
+* SQLite
+* SQL
+
+**Dashboard**
+
+* Streamlit
+
+**Development**
+
+* Jupyter Notebook
+* Git
+* GitHub
+
+---
+
+## Running the Project Locally
+
+Clone the repository:
 
 ```bash
 git clone https://github.com/divya5-11-04/Sentiment_Analysis.git
 cd Sentiment_Analysis
+```
+
+Create a virtual environment:
+
+```bash
+python -m venv venv
+```
+
+Activate it on Windows:
+
+```bash
+venv\Scripts\activate
+```
+
+Install dependencies:
+
+```bash
 pip install -r requirements.txt
-python -c "import nltk; nltk.download('vader_lexicon')"
+```
 
-# regenerate data + database (optional — already included)
-python data/generate_data.py
-python sql/build_database.py
+Run the Streamlit dashboard:
 
-# open the notebook
-jupyter notebook analysis/ea_player_sentiment_analysis.ipynb
-
-# or run the dashboard
+```bash
 streamlit run app/streamlit_app.py
 ```
 
----
-
-## Deploying the dashboard (free, ~2 minutes)
-
-This app has no secrets or paid dependencies, so it deploys cleanly on
-**Streamlit Community Cloud**:
-
-1. Push this folder to a public GitHub repo.
-2. Go to [share.streamlit.io](https://share.streamlit.io), sign in with
-   GitHub, click **"New app"**.
-3. Pick your repo, set the main file path to `app/streamlit_app.py`,
-   and deploy.
-4. Streamlit Cloud installs `requirements.txt` automatically. You'll get
-   a public URL like `https://<your-app-name>.streamlit.app`.
-
-Once deployed, add the live Streamlit link at the top of this README and in your
-application/resume.
+The dashboard should open automatically in your browser.
 
 ---
 
-## Limitations & honest caveats
+## Reproducing the Dataset
 
-- **Data is synthetic.** It's built to have realistic structure (see
-  above), but it is not real EA telemetry. Every finding in this project
-  is a demonstration of method, not a claim about real EA games.
-- **The classifier's 99.3% accuracy is a ceiling, not a floor.** Real
-  review text is messier (sarcasm, mixed languages, spam) — production
-  accuracy would be lower, which is exactly why the notebook checks the
-  train/test gap rather than trusting the headline number.
-- **The anomaly detector and forecast use simple, explainable methods**
-  (rolling z-score; Holt-Winters) deliberately, since a baseline you can
-  explain to a producer in one sentence is more useful on day one than a
-  more complex model you can't.
+The synthetic dataset can be regenerated using the data-generation script:
+
+```bash
+python data/generate_data.py
+```
+
+This creates the review data used by the analysis pipeline.
+
+---
+
+## Reproducing the Database
+
+To build the SQLite database:
+
+```bash
+python sql/build_database.py
+```
+
+The resulting database can then be queried using the SQL scripts in the `sql/` directory.
+
+---
+
+## Limitations
+
+This project has several important limitations:
+
+### Synthetic Data
+
+The reviews are generated rather than collected from real players. Therefore, the dataset does not represent actual player opinions.
+
+### Model Performance
+
+The reported 99.3% accuracy is measured on the project evaluation data. It should not be treated as evidence that the same performance would be achieved on real-world reviews.
+
+### Language Complexity
+
+Real reviews may contain:
+
+* Sarcasm
+* Slang
+* Typos
+* Mixed positive and negative opinions
+* Very short reviews
+* Context-dependent language
+
+These factors can reduce sentiment-classification performance.
+
+### Generalization
+
+Further validation using a real, independently collected dataset would be required before using the system in a production environment.
+
+---
+
+## What I Learned
+
+This project helped me work through an end-to-end analytics workflow rather than treating sentiment classification as an isolated machine-learning problem.
+
+Key areas covered:
+
+* Preparing unstructured text for analysis
+* Building an NLP classification pipeline
+* Evaluating models beyond overall accuracy
+* Working with imbalanced classes
+* Designing analytical SQL queries
+* Connecting Python analysis with a database
+* Building an interactive analytics dashboard
+* Thinking about model limitations and generalization
+* Deploying a Python application using Streamlit
+
+---
+
+## Future Improvements
+
+Potential improvements include:
+
+* Evaluate the model on a real-world review dataset
+* Experiment with transformer-based sentiment models
+* Add topic modeling to identify common complaint categories
+* Add review-level search and filtering
+* Add automated monitoring for significant sentiment changes
+* Improve anomaly detection with statistical thresholds
+* Add model explainability for individual predictions
+* Connect the dashboard to a continuously updated review source
+
+---
+
+## Project Links
+
+**GitHub:**
+https://github.com/divya5-11-04/Sentiment_Analysis
+
+**Live Dashboard:**
+Add your deployed Streamlit URL here.
+
+---
+
+## Disclaimer
+
+This project is an educational and portfolio project. The player-review dataset is synthetic and was created for demonstrating the data, NLP, SQL, and dashboarding workflow. The reported model metrics should therefore be interpreted within the context of this dataset and its limitations.

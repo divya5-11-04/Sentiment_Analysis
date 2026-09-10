@@ -22,7 +22,7 @@ import nltk
 
 # --- data loading -----------------------------------------------------
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_PATH = os.path.join(APP_DIR, "..", "data", "ea_player_reviews.csv")
+DATA_PATH = os.path.join(APP_DIR, "..", "data", "player_reviews.csv")
 
 st.set_page_config(page_title="EA Player Sentiment Analytics", layout="wide")
 

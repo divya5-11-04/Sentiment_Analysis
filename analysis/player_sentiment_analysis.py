@@ -1,12 +1,12 @@
 # %% [markdown]
-# # EA Player Review & Sentiment Analytics
+# # Player Review & Sentiment Analytics
 #
-# **Simulated EA Product Analyst project** — built to mirror the kind of
+# **Simulated Product Analyst project** — built to mirror the kind of
 # analysis a Product Analyst Intern on EA Hyderabad's Slingshot Studios
 # team would run: turning raw player reviews into decisions about
 # engagement, retention risk, and live-service health.
 #
-# **Games covered:** EA SPORTS FC 25, Apex Legends, The Sims 4, Battlefield 2042
+# **Games covered:**  SPORTS FC 25, Apex Legends, The Sims 4, Battlefield 2042
 # **Data:** ~8,000 synthetic player reviews (Jan–Jun 2024), generated with
 # realistic rating/sentiment correlation and one deliberate "bad patch"
 # event injected into the Battlefield 2042 data, so the anomaly-detection
@@ -44,7 +44,7 @@ import seaborn as sns
 plt.style.use("ggplot")
 sns.set_palette("Set2")
 
-df = pd.read_csv("../data/ea_player_reviews.csv", parse_dates=["review_date"])
+df = pd.read_csv("../data/player_reviews.csv", parse_dates=["review_date"])
 print(df.shape)
 df.head()
 
